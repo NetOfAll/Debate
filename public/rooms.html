@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rooms of Vision — The Great Debate Forum</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:   #7c6dfa;
+      --accent2:  #a99cff;
+      --bg:       #0d0d14;
+      --border:   rgba(255,255,255,0.10);
+      --text:     #e8e6f0;
+      --muted:    rgba(232,230,240,0.45);
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── Background glow ── */
+    .bg-glow {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 55% at 50% 20%, rgba(124,109,250,0.16) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 35% at 80% 80%, rgba(169,156,255,0.08) 0%, transparent 65%),
+        var(--bg);
+    }
+
+    /* ── Top band ── */
+    header {
+      position: relative; z-index: 10;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      background: rgba(13,13,20,0.72);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 15px; font-weight: 700; letter-spacing: .04em;
+      color: var(--text);
+    }
+    .logo-text span { color: var(--accent2); }
+
+    .user-area {
+      display: flex; align-items: center; gap: 14px;
+      font-size: 13px; color: var(--muted);
+    }
+    .user-area strong { color: var(--text); }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px; font-weight: 600;
+      padding: 6px 14px; border-radius: 6px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .logout-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+
+    /* ── Main content ── */
+    main {
+      position: relative; z-index: 5;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .page-title {
+      font-size: 28px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      font-size: 14px; color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    /* ── Room grid ── */
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .room-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      cursor: pointer;
+      transition: transform .15s, border-color .2s, background .2s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .room-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      background: rgba(124,109,250,0.08);
+    }
+
+    .room-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.25);
+    }
+
+    .room-name {
+      font-size: 17px; font-weight: 700;
+    }
+    .room-desc {
+      font-size: 13px; color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .room-meta {
+      margin-top: 8px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--accent2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-icon"></div>
+      <span class="logo-text">The Great <span>Debate</span> Forum</span>
+    </a>
+    <div class="user-area">
+      <span>Signed in as <strong id="usernameLabel">...</strong></span>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">Rooms of Vision</div>
+    <div class="page-sub">Choose a topic. Arrange the evidence. Defend your view.</div>
+
+    <div class="room-grid">
+
+      <div class="room-card" onclick="enterRoom('theology')">
+        <div class="room-icon">📖</div>
+        <div class="room-name">Theology</div>
+        <div class="room-desc">Bible prophecy timelines — Matthew 24-27, 1 Thessalonians 4-5, Revelation 6, 11, 16, 19.</div>
+        <div class="room-meta">Open</div>
+      </div>
+
+      <div class="room-card" onclick="enterRoom('politics')">
+        <div class="room-icon">🏛️</div>
+        <div class="room-name">Politics</div>
+        <div class="room-desc">Lay out historical and current events to argue cause, effect, and consequence.</div>
+        <div class="room-meta">Coming soon</div>
+      </div>
+
+      <div class="room-card" onclick="enterRoom('history')">
+        <div class="room-icon">🗺️</div>
+        <div class="room-name">History</div>
+        <div class="room-desc">Build competing timelines of historical events and their interpretations.</div>
+        <div class="room-meta">Coming soon</div>
+      </div>
+
+      <div class="room-card" onclick="enterRoom('science')">
+        <div class="room-icon">🔬</div>
+        <div class="room-name">Science</div>
+        <div class="room-desc">Arrange evidence and findings to support or challenge a hypothesis.</div>
+        <div class="room-meta">Coming soon</div>
+      </div>
+
+      <div class="room-card" onclick="enterRoom('architecture')">
+        <div class="room-icon">🏗️</div>
+        <div class="room-name">Architecture</div>
+        <div class="room-desc">Compare design philosophies, structures, and influences across eras.</div>
+        <div class="room-meta">Coming soon</div>
+      </div>
+
+      <div class="room-card" onclick="enterRoom('literature')">
+        <div class="room-icon">📚</div>
+        <div class="room-name">Literature</div>
+        <div class="room-desc">Map themes, influences, and timelines across texts and authors.</div>
+        <div class="room-meta">Coming soon</div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Load current username
+    fetch('/api/whoami')
+      .then(r => r.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById('usernameLabel').textContent = data.username;
+        } else {
+          window.location.href = '/';
+        }
+      });
+
+    async function logout() {
+      await fetch('/logout', { method: 'POST' });
+      window.location.href = '/';
+    }
+
+    function enterRoom(roomId) {
+      if (roomId === 'theology') {
+        alert('The Theology room is next on our build list! 😊');
+      } else {
+        alert('This room is coming soon — stay tuned!');
+      }
+    }
+  </script>
+
+</body>
+</html>
