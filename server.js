@@ -13,7 +13,10 @@ const PORT = process.env.PORT || 3000;
 // (use the "Internal Database URL" from your Render Postgres instance)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
+  max: 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
 });
 
 // ── Middleware ──
@@ -37,6 +40,11 @@ function requireLogin(req, res, next) {
 // served directly to logged-out visitors
 app.get('/rooms.html', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'rooms.html'));
+});
+
+// Protect theology-room.html the same way
+app.get('/theology-room.html', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'theology-room.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -131,6 +139,50 @@ app.get('/api/whoami', (req, res) => {
     res.json({ loggedIn: true, username: req.session.username });
   } else {
     res.json({ loggedIn: false });
+  }
+});
+
+// ── Notes API ──
+
+// Get all notes for the logged-in user (returns { general: "...", theology: "..." })
+app.get('/api/notes', requireLogin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT room, content FROM notes WHERE user_id = $1',
+      [req.session.userId]
+    );
+    const notes = {};
+    result.rows.forEach(row => { notes[row.room] = row.content; });
+    res.json({ notes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error loading notes.' });
+  }
+});
+
+// Save/update a note for a specific room ({ room, content })
+app.post('/api/notes', requireLogin, async (req, res) => {
+  const { room, content } = req.body;
+
+  if (!room || typeof content !== 'string') {
+    return res.status(400).json({ error: 'room and content are required.' });
+  }
+  if (content.length > 165) {
+    return res.status(400).json({ error: 'Note exceeds maximum length.' });
+  }
+
+  try {
+    await pool.query(`
+      INSERT INTO notes (user_id, room, content, updated_at)
+      VALUES ($1, $2, $3, NOW())
+      ON CONFLICT (user_id, room)
+      DO UPDATE SET content = EXCLUDED.content, updated_at = NOW()
+    `, [req.session.userId, room, content]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error saving note.' });
   }
 });
 
