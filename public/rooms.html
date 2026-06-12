@@ -227,12 +227,13 @@
     }
 
     function enterRoom(roomId) {
-      if (roomId === 'theology') {
-        alert('The Theology room is next on our build list! 😊');
-      } else {
-        alert('This room is coming soon — stay tuned!');
-      }
-    }
+     function enterRoom(roomId) {
+  if (roomId === 'theology') {
+    window.location.href = '/theology-room.html';
+  } else {
+    alert('This room is coming soon — stay tuned!');
+  }
+}
   </script>
 
 </body>
