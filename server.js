@@ -7,7 +7,16 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+// New test 
+app.get('/health', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ ok: true, time: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+// New test 
 // ── Database connection ──
 // DATABASE_URL must be set in Render's Environment settings
 // (use the "Internal Database URL" from your Render Postgres instance)
