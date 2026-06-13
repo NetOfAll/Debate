@@ -83,9 +83,9 @@
   .note-btn:hover{ opacity:1; }
   .evidence.collapsed .note-btn{ display:none; }
 
-  /* small popup for per-card notes */
+  /* small popup for per-card notes (appended to body, positioned fixed) */
   .card-note-popup{
-    position:absolute; z-index:40;
+    position:fixed; z-index:60;
     width:200px;
     background:rgba(13,13,20,0.95);
     backdrop-filter:blur(14px);
@@ -250,7 +250,13 @@
   .drawer-header{
     padding:16px; border-bottom:1px solid var(--border);
   }
-  .drawer-header .title{ font-size:15px; font-weight:700; margin-bottom:10px; }
+  .drawer-header .title{ font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .drawer-close{
+    cursor:pointer; font-size:16px; color:var(--muted);
+    padding:2px 6px; border-radius:6px;
+    transition:color .2s, background .2s;
+  }
+  .drawer-close:hover{ color:var(--accent2); background:rgba(124,109,250,0.10); }
   .drawer-search{
     width:100%;
     background:rgba(255,255,255,0.05);
@@ -419,7 +425,10 @@
 
 <div class="drawer" id="drawer">
   <div class="drawer-header">
-    <div class="title">Bible — Search & Browse</div>
+    <div class="title">
+      <span class="drawer-close" onclick="document.getElementById('drawer').classList.remove('open')">&larr;</span>
+      Bible — Search &amp; Browse
+    </div>
     <input class="drawer-search" id="drawerSearch" type="text" placeholder="Search book or verse text...">
   </div>
   <div class="drawer-body" id="drawerBody">
@@ -803,17 +812,18 @@
   function openCardNote(e, cardId){
     e.stopPropagation();
     const card = document.querySelector('.evidence[data-id="'+cardId+'"]');
-    let popup = card.querySelector('.card-note-popup');
+    let popup = document.querySelector('.card-note-popup[data-for="'+cardId+'"]');
 
     if (!popup) {
       popup = document.createElement('div');
       popup.className = 'card-note-popup';
+      popup.dataset.for = cardId;
       popup.innerHTML = `
         <div class="cn-close" onclick="event.stopPropagation(); this.closest('.card-note-popup').classList.remove('open')">✕</div>
         <textarea maxlength="165" placeholder="Note for this verse..."></textarea>
         <div class="cn-counter">0 / 150</div>
       `;
-      card.appendChild(popup);
+      document.body.appendChild(popup);
 
       const ta = popup.querySelector('textarea');
       const counter = popup.querySelector('.cn-counter');
@@ -839,11 +849,13 @@
       popup.addEventListener('mousedown', e => e.stopPropagation());
     }
 
-    popup.style.left = '0px';
+    // position the popup near the card, just outside its top/bottom edge
+    const cardRect = card.getBoundingClientRect();
+    popup.style.left = cardRect.left + 'px';
     if (card.classList.contains('above')) {
-      popup.style.bottom = '100%'; popup.style.top = 'auto'; popup.style.marginBottom = '6px';
+      popup.style.top = (cardRect.bottom + 6) + 'px';
     } else {
-      popup.style.top = '100%'; popup.style.bottom = 'auto'; popup.style.marginTop = '6px';
+      popup.style.top = (cardRect.top - 6 - 110) + 'px'; // ~popup height
     }
     popup.classList.toggle('open');
   }
