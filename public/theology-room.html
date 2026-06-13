@@ -73,13 +73,51 @@
     white-space:nowrap;
   }
 
-  /* connector line from icon to its point on timeline */
-  .connector{
-    position:absolute;
-    width:1px;
-    background:rgba(124,109,250,0.45);
-    left:0; /* set per item via inline style */
+  /* note button on each card */
+  .note-btn{
+    position:absolute; bottom:4px; right:14px;
+    font-size:13px; cursor:pointer;
+    opacity:.55; transition:opacity .2s;
+    z-index:2;
   }
+  .note-btn:hover{ opacity:1; }
+  .evidence.collapsed .note-btn{ display:none; }
+
+  /* small popup for per-card notes */
+  .card-note-popup{
+    position:absolute; z-index:40;
+    width:200px;
+    background:rgba(13,13,20,0.95);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+    display:none;
+  }
+  .card-note-popup.open{ display:block; }
+  .card-note-popup textarea{
+    width:100%; height:70px; resize:none;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:6px 8px;
+    font-size:12px; line-height:1.4;
+    color:var(--text);
+    font-family:inherit;
+    outline:none;
+  }
+  .card-note-popup textarea:focus{
+    border-color:var(--accent);
+  }
+  .card-note-popup .cn-counter{
+    margin-top:4px; font-size:10px; color:var(--muted); text-align:right;
+  }
+  .card-note-popup .cn-close{
+    position:absolute; top:4px; right:8px;
+    font-size:12px; color:var(--muted); cursor:pointer;
+  }
+  .card-note-popup .cn-close:hover{ color:var(--text); }
 
   /* evidence icon card */
   .evidence{
@@ -88,33 +126,44 @@
     background:rgba(255,255,255,0.04);
     border:1px solid var(--border);
     border-radius:10px;
-    padding:10px 22px 10px 12px;
     font-size:12px;
     line-height:1.4;
-    cursor:grab;
-    transition:width .25s ease, padding .25s ease, border-color .2s, transform .15s, background .2s;
+    transition:width .25s ease, height .25s ease, border-color .2s, transform .15s, background .2s;
     overflow:hidden;
+    user-select:none;
   }
   .evidence:hover{
     border-color:var(--accent);
     background:rgba(124,109,250,0.08);
-    transform:translateY(-2px);
   }
-  .evidence .ref{
-    font-weight:700; color:var(--accent2);
-    font-size:12px; margin-bottom:4px;
+
+  /* ── Ribbon: drag handle + verse reference + collapse toggle ── */
+  .ribbon{
+    background:#aac8ff;          /* light blue */
+    color:#2c2154;                /* dark lila text */
+    font-weight:700;
+    font-size:12px;
+    padding:6px 10px;
     display:flex; align-items:center; gap:6px;
     white-space:nowrap;
+    cursor:grab;
+    border-radius:9px 9px 0 0;
   }
-  .evidence .ref .dot{
+  .ribbon:active{ cursor:grabbing; }
+  .ribbon .dot{
     width:8px;height:8px;border-radius:50%;
-    background:var(--accent); flex-shrink:0;
+    background:#2c2154; flex-shrink:0;
   }
-  .evidence .txt{ color:var(--text); opacity:.85; }
+  .ribbon .label-text{ overflow:hidden; text-overflow:ellipsis; }
 
-  /* collapse strips container */
+  .evidence .txt{
+    color:var(--text); opacity:.85;
+    padding:8px 22px 10px 12px;
+  }
+
+  /* collapse strip (square / icon mode) */
   .collapse-strip{
-    position:absolute; top:0; right:0; bottom:18px;
+    position:absolute; top:0; right:0; bottom:0;
     width:10px;
     background:#e5544f;
     cursor:pointer;
@@ -122,52 +171,46 @@
   }
   .collapse-strip:hover{ background:#ff6b65; }
 
-  .collapse-strip-v{
-    position:absolute; left:0; right:10px; bottom:0;
-    height:10px;
-    background:var(--accent2);
-    cursor:pointer;
-    transition:background .2s;
-  }
-  .collapse-strip-v:hover{ background:#c2b8ff; }
-
   /* collapsed state: shrink to a square */
   .evidence.collapsed{
     width:48px;
     height:48px;
-    padding:10px 22px 18px 4px;
     cursor:pointer;
   }
-  .evidence.collapsed .ref .label-text,
+  .evidence.collapsed .ribbon .label-text,
   .evidence.collapsed .txt{
     display:none;
   }
-  .evidence.collapsed .ref{
+  .evidence.collapsed .ribbon{
     writing-mode: vertical-rl;
     transform: rotate(180deg);
-    margin:0; gap:8px;
     height:100%;
     justify-content:flex-start;
+    border-radius:0 0 9px 9px; /* visually flips with rotation */
+    padding:4px;
   }
-  .evidence.collapsed:hover{ transform:none; }
 
-  /* vertical collapse: only the verse-ref bar remains, full width */
-  .evidence.collapsed-v{
-    height:auto;
-    padding:10px 22px 10px 12px;
-  }
+  /* vertical collapse: only the ribbon remains, full width */
   .evidence.collapsed-v .txt{
     display:none;
   }
-  .evidence.collapsed-v .ref{
-    margin-bottom:0;
-  }
-  .evidence.collapsed-v .collapse-strip-v{
-    bottom:auto; top:0; right:10px; left:0; height:10px;
+  .evidence.collapsed-v .ribbon{
+    border-radius:9px;
   }
   /* if both collapsed states active, square wins visually */
   .evidence.collapsed.collapsed-v{
     height:48px;
+  }
+  .evidence.collapsed.collapsed-v .ribbon{
+    border-radius:0 0 9px 9px;
+  }
+
+  /* while actively being dragged */
+  .evidence.dragging{
+    z-index:30;
+    opacity:0.9;
+    transition:none;
+    cursor:grabbing;
   }
 
   /* position helpers — above the line */
@@ -315,48 +358,44 @@
     <div class="tick" style="left:95%"></div>
     <div class="tick-label" style="left:95%">Second Coming</div>
 
-    <!-- Connectors -->
-    <div class="connector" style="left:5%;  top:calc(50% - 90px); height:90px;"></div>
-    <div class="connector" style="left:25%; top:50%;             height:80px;"></div>
-    <div class="connector" style="left:50%; top:calc(50% - 70px); height:70px;"></div>
-    <div class="connector" style="left:75%; top:50%;             height:100px;"></div>
-    <div class="connector" style="left:95%; top:calc(50% - 60px); height:60px;"></div>
+    <!-- Connectors: drawn dynamically in JS, anchors stay fixed on the line -->
+    <svg id="connectorSvg" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1;"></svg>
 
     <!-- Evidence cards: ABOVE the line -->
-    <div class="evidence above" data-id="e1" style="left:5%;  top:calc(50% - 170px); transform:translateX(-50%);">
-      <div class="ref"><span class="dot"></span><span class="label-text">Matt 24:2</span></div>
+    <div class="evidence above" data-id="e1" data-anchor="5" style="left:5%;  top:calc(50% - 170px); transform:translateX(-50%);">
+      <div class="ribbon"><span class="dot"></span><span class="label-text">Matt 24:2</span></div>
       <div class="txt">"Not one stone left upon another" — Temple destruction foretold.</div>
       <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
-      <div class="collapse-strip-v" onclick="toggleCollapseV(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'e1')">📝</div>
     </div>
 
-    <div class="evidence above" data-id="e2" style="left:50%; top:calc(50% - 150px); transform:translateX(-50%);">
-      <div class="ref"><span class="dot"></span><span class="label-text">Matt 24:14</span></div>
+    <div class="evidence above" data-id="e2" data-anchor="50" style="left:50%; top:calc(50% - 150px); transform:translateX(-50%);">
+      <div class="ribbon"><span class="dot"></span><span class="label-text">Matt 24:14</span></div>
       <div class="txt">Gospel preached in all the world, then the end shall come.</div>
       <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
-      <div class="collapse-strip-v" onclick="toggleCollapseV(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'e2')">📝</div>
     </div>
 
-    <div class="evidence above" data-id="e3" style="left:95%; top:calc(50% - 150px); transform:translateX(-50%);">
-      <div class="ref"><span class="dot"></span><span class="label-text">Matt 24:30</span></div>
+    <div class="evidence above" data-id="e3" data-anchor="95" style="left:95%; top:calc(50% - 150px); transform:translateX(-50%);">
+      <div class="ribbon"><span class="dot"></span><span class="label-text">Matt 24:30</span></div>
       <div class="txt">Sign of the Son of Man appears — He comes in the clouds.</div>
       <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
-      <div class="collapse-strip-v" onclick="toggleCollapseV(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'e3')">📝</div>
     </div>
 
     <!-- Evidence cards: BELOW the line -->
-    <div class="evidence below" data-id="e4" style="left:25%; top:calc(50% + 30px); transform:translateX(-50%);">
-      <div class="ref" style="color:var(--accent)"><span class="dot" style="background:var(--accent2)"></span><span class="label-text">Matt 24:21</span></div>
+    <div class="evidence below" data-id="e4" data-anchor="25" style="left:25%; top:calc(50% + 30px); transform:translateX(-50%);">
+      <div class="ribbon"><span class="dot"></span><span class="label-text">Matt 24:21</span></div>
       <div class="txt">Great tribulation, such as was not since the beginning of the world.</div>
       <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
-      <div class="collapse-strip-v" onclick="toggleCollapseV(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'e4')">📝</div>
     </div>
 
-    <div class="evidence below" data-id="e5" style="left:75%; top:calc(50% + 50px); transform:translateX(-50%);">
-      <div class="ref" style="color:var(--accent)"><span class="dot" style="background:var(--accent2)"></span><span class="label-text">Matt 25:31</span></div>
+    <div class="evidence below" data-id="e5" data-anchor="75" style="left:75%; top:calc(50% + 50px); transform:translateX(-50%);">
+      <div class="ribbon"><span class="dot"></span><span class="label-text">Matt 25:31</span></div>
       <div class="txt">Son of Man comes in glory, all the holy angels with Him, and sits on His throne.</div>
       <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
-      <div class="collapse-strip-v" onclick="toggleCollapseV(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'e5')">📝</div>
     </div>
 
   </div>
@@ -365,7 +404,7 @@
     <div class="legend-item"><div class="legend-dot above"></div> Above the line — one interpretation strand</div>
     <div class="legend-item"><div class="legend-dot below"></div> Below the line — alternate / contrasting strand</div>
     <div class="legend-item"><div class="legend-dot" style="background:#e5544f"></div> Red strip — collapse to a square (icon mode)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Lila strip — collapse vertically (verse title only)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#aac8ff"></div> Blue ribbon — drag to move · click to collapse</div>
   </div>
 </main>
 
@@ -374,21 +413,158 @@
     event.stopPropagation();
     const card = strip.closest('.evidence');
     card.classList.toggle('collapsed');
+    setTimeout(() => updateConnector(card), 260); // after CSS transition
   }
-  function toggleCollapseV(strip){
-    event.stopPropagation();
-    const card = strip.closest('.evidence');
-    card.classList.toggle('collapsed-v');
-  }
-  // also allow clicking a collapsed card anywhere to re-expand both states
+
+  // also allow clicking a collapsed (square) card anywhere to re-expand
   document.querySelectorAll('.evidence').forEach(card => {
     card.addEventListener('click', (e) => {
-      if (card.classList.contains('collapsed') || card.classList.contains('collapsed-v')) {
+      if (card.classList.contains('collapsed') && !card.classList.contains('collapsed-v')) {
         card.classList.remove('collapsed');
-        card.classList.remove('collapsed-v');
+        setTimeout(() => updateConnector(card), 260);
       }
     });
   });
+
+  // ── Ribbon: drag to move, click (no drag) to toggle vertical collapse ──
+  const timelineWrap = document.getElementById('timelineWrap');
+  const DRAG_THRESHOLD = 4; // px of movement before it counts as a drag
+
+  document.querySelectorAll('.evidence').forEach(card => {
+    const ribbon = card.querySelector('.ribbon');
+    let startX, startY, startLeft, startTop, dragging = false;
+
+    ribbon.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const wrapRect = timelineWrap.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+
+      // convert current position to absolute px within timelineWrap,
+      // removing the translateX(-50%) centering for predictable dragging
+      startLeft = cardRect.left - wrapRect.left;
+      startTop  = cardRect.top  - wrapRect.top;
+      card.style.transform = 'none';
+      card.style.left = startLeft + 'px';
+      card.style.top  = startTop  + 'px';
+
+      startX = e.clientX;
+      startY = e.clientY;
+      dragging = false;
+
+      function onMove(e){
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (!dragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+          dragging = true;
+          card.classList.add('dragging');
+        }
+        if (dragging) {
+          card.style.left = (startLeft + dx) + 'px';
+          card.style.top  = (startTop  + dy) + 'px';
+          updateConnector(card);
+        }
+      }
+
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        card.classList.remove('dragging');
+
+        if (!dragging) {
+          // it was a click, not a drag -> toggle vertical collapse
+          card.classList.toggle('collapsed-v');
+          setTimeout(() => updateConnector(card), 260);
+        }
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+
+  // ── Dynamic connectors (anchor fixed on timeline, other end follows card) ──
+  const svg = document.getElementById('connectorSvg');
+  const lineEls = {};
+
+  function getAnchorXY(card){
+    const anchorPct = parseFloat(card.dataset.anchor);
+    const wrapRect = timelineWrap.getBoundingClientRect();
+    return { x: wrapRect.width * (anchorPct/100), y: wrapRect.height/2 };
+  }
+  function getCardConnectXY(card){
+    const wrapRect = timelineWrap.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const isAbove = card.classList.contains('above');
+    return {
+      x: (cardRect.left + cardRect.width/2) - wrapRect.left,
+      y: (isAbove ? cardRect.bottom : cardRect.top) - wrapRect.top
+    };
+  }
+  function updateConnector(card){
+    const line = lineEls[card.dataset.id];
+    if (!line) return;
+    const a = getAnchorXY(card), b = getCardConnectXY(card);
+    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+  }
+  document.querySelectorAll('.evidence').forEach(card => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('stroke','rgba(124,109,250,0.45)');
+    line.setAttribute('stroke-width','1');
+    line.setAttribute('stroke-dasharray','4 4');
+    svg.appendChild(line);
+    lineEls[card.dataset.id] = line;
+    updateConnector(card);
+  });
+
+  // ── Per-card notes popup ──
+  function openCardNote(e, cardId){
+    e.stopPropagation();
+    const card = document.querySelector('.evidence[data-id="'+cardId+'"]');
+    let popup = card.querySelector('.card-note-popup');
+
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.className = 'card-note-popup';
+      popup.innerHTML = `
+        <div class="cn-close" onclick="event.stopPropagation(); this.closest('.card-note-popup').classList.remove('open')">✕</div>
+        <textarea maxlength="165" placeholder="Note for this verse..."></textarea>
+        <div class="cn-counter">0 / 150</div>
+      `;
+      card.appendChild(popup);
+
+      const ta = popup.querySelector('textarea');
+      const counter = popup.querySelector('.cn-counter');
+      const room = 'card_' + cardId;
+
+      fetch('/api/notes').then(r=>r.json()).then(data => {
+        ta.value = (data.notes && data.notes[room]) || '';
+        counter.textContent = ta.value.length + ' / 150';
+      });
+
+      let t;
+      ta.addEventListener('input', () => {
+        counter.textContent = ta.value.length + ' / 150';
+        counter.style.color = ta.value.length >= 135 ? '#ff6b6b' : 'var(--muted)';
+        clearTimeout(t);
+        t = setTimeout(() => {
+          fetch('/api/notes', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ room, content: ta.value })
+          });
+        }, 400);
+      });
+      popup.addEventListener('mousedown', e => e.stopPropagation());
+    }
+
+    popup.style.left = '0px';
+    if (card.classList.contains('above')) {
+      popup.style.bottom = '100%'; popup.style.top = 'auto'; popup.style.marginBottom = '6px';
+    } else {
+      popup.style.top = '100%'; popup.style.bottom = 'auto'; popup.style.marginTop = '6px';
+    }
+    popup.classList.toggle('open');
+  }
 </script>
 
 <!-- ── Notebook ── -->
