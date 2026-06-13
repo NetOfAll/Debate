@@ -224,7 +224,86 @@
     display:flex; gap:24px; flex-wrap:wrap;
     font-size:12px; color:var(--muted);
   }
-  /* ── Notebook ── */
+  /* ── Bible drawer ── */
+  .drawer-toggle{
+    position:fixed; left:0; top:50%; transform:translateY(-50%);
+    z-index:50;
+    background:var(--accent);
+    border:none; border-radius:0 8px 8px 0;
+    color:#fff; font-size:18px;
+    padding:14px 8px;
+    cursor:pointer;
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  }
+  .drawer{
+    position:fixed; left:0; top:0; bottom:0; z-index:55;
+    width:280px;
+    background:rgba(13,13,20,0.96);
+    backdrop-filter:blur(18px);
+    border-right:1px solid var(--border);
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    display:flex; flex-direction:column;
+  }
+  .drawer.open{ transform:translateX(0); }
+
+  .drawer-header{
+    padding:16px; border-bottom:1px solid var(--border);
+  }
+  .drawer-header .title{ font-size:15px; font-weight:700; margin-bottom:10px; }
+  .drawer-search{
+    width:100%;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:13px;
+    color:var(--text);
+    outline:none;
+  }
+  .drawer-search:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(124,109,250,0.18);
+  }
+  .drawer-search::placeholder{ color: rgba(232,230,240,0.28); }
+
+  .drawer-body{
+    flex:1; overflow-y:auto; padding:8px 0;
+  }
+
+  .book{ border-bottom:1px solid rgba(255,255,255,0.04); }
+  .book-name{
+    padding:10px 16px;
+    font-size:13px; font-weight:600;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+    transition:background .15s, color .15s;
+  }
+  .book-name:hover{ background:rgba(124,109,250,0.08); color:var(--accent2); }
+  .book-name .chev{ transition:transform .2s; color:var(--muted); font-size:11px; }
+  .book.open .book-name .chev{ transform:rotate(90deg); }
+
+  .verses{ display:none; padding:0 16px 8px 26px; }
+  .book.open .verses{ display:block; }
+
+  .verse-item{
+    padding:6px 8px;
+    font-size:12px; line-height:1.4;
+    color:var(--muted);
+    border-radius:6px;
+    cursor:grab;
+    transition:background .15s, color .15s;
+  }
+  .verse-item:hover{ background:rgba(124,109,250,0.10); color:var(--text); }
+  .verse-item .vref{ font-weight:700; color:var(--accent2); margin-right:4px; }
+
+  /* search match highlight */
+  .verse-item.match .vref,
+  .book-name.match{ color:#ffd56b; }
+  .hidden-by-search{ display:none !important; }
+  .no-results{
+    padding:16px; text-align:center; color:var(--muted); font-size:12px;
+  }
   .notebook-toggle{
     position:fixed; right:24px; bottom:24px; z-index:50;
     width:52px; height:52px; border-radius:50%;
@@ -335,6 +414,60 @@
   <a class="back-link" href="rooms.html">&larr; Back to Rooms</a>
 </header>
 
+<!-- ── Bible drawer ── -->
+<button class="drawer-toggle" id="drawerToggle" title="Bible verses">📖</button>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="title">Bible — Search & Browse</div>
+    <input class="drawer-search" id="drawerSearch" type="text" placeholder="Search book or verse text...">
+  </div>
+  <div class="drawer-body" id="drawerBody">
+
+    <div class="book" data-book="Matthew">
+      <div class="book-name" onclick="toggleBook(this)">
+        <span>Matthew</span><span class="chev">▶</span>
+      </div>
+      <div class="verses">
+        <div class="verse-item" draggable="true" data-ref="Matt 24:2"><span class="vref">24:2</span>"Not one stone left upon another" — Temple destruction foretold.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 24:14"><span class="vref">24:14</span>Gospel preached in all the world, then the end shall come.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 24:21"><span class="vref">24:21</span>Great tribulation, such as was not since the beginning of the world.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 24:30"><span class="vref">24:30</span>Sign of the Son of Man appears — He comes in the clouds.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 24:36"><span class="vref">24:36</span>Of that day and hour knoweth no man, no, not the angels of heaven.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 25:13"><span class="vref">25:13</span>Watch therefore, for ye know neither the day nor the hour.</div>
+        <div class="verse-item" draggable="true" data-ref="Matt 25:31"><span class="vref">25:31</span>Son of Man comes in glory, all the holy angels with Him, and sits on His throne.</div>
+      </div>
+    </div>
+
+    <div class="book" data-book="1 Thessalonians">
+      <div class="book-name" onclick="toggleBook(this)">
+        <span>1 Thessalonians</span><span class="chev">▶</span>
+      </div>
+      <div class="verses">
+        <div class="verse-item" draggable="true" data-ref="1 Thess 4:16"><span class="vref">4:16</span>The Lord Himself shall descend with a shout, with the voice of the archangel.</div>
+        <div class="verse-item" draggable="true" data-ref="1 Thess 4:17"><span class="vref">4:17</span>We which are alive shall be caught up together with them in the clouds.</div>
+        <div class="verse-item" draggable="true" data-ref="1 Thess 5:2"><span class="vref">5:2</span>The day of the Lord so cometh as a thief in the night.</div>
+      </div>
+    </div>
+
+    <div class="book" data-book="Revelation">
+      <div class="book-name" onclick="toggleBook(this)">
+        <span>Revelation</span><span class="chev">▶</span>
+      </div>
+      <div class="verses">
+        <div class="verse-item" draggable="true" data-ref="Rev 6:12"><span class="vref">6:12</span>There was a great earthquake; the sun became black, the moon became as blood.</div>
+        <div class="verse-item" draggable="true" data-ref="Rev 11:15"><span class="vref">11:15</span>The kingdoms of this world are become the kingdoms of our Lord.</div>
+        <div class="verse-item" draggable="true" data-ref="Rev 16:16"><span class="vref">16:16</span>He gathered them together into a place called Armageddon.</div>
+        <div class="verse-item" draggable="true" data-ref="Rev 19:11"><span class="vref">19:11</span>I saw heaven opened, and behold a white horse; He that sat upon him was called Faithful and True.</div>
+      </div>
+    </div>
+
+    <div class="no-results" id="noResults" style="display:none;">No matches found.</div>
+
+  </div>
+</div>
+
+
 <main>
   <div class="page-title">Theology — Bible Prophecy Timeline</div>
   <div class="page-sub">Static layout preview · Matthew 24-25 sample evidence</div>
@@ -416,73 +549,9 @@
     setTimeout(() => updateConnector(card), 260); // after CSS transition
   }
 
-  // also allow clicking a collapsed (square) card anywhere to re-expand
-  document.querySelectorAll('.evidence').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (card.classList.contains('collapsed') && !card.classList.contains('collapsed-v')) {
-        card.classList.remove('collapsed');
-        setTimeout(() => updateConnector(card), 260);
-      }
-    });
-  });
-
   // ── Ribbon: drag to move, click (no drag) to toggle vertical collapse ──
   const timelineWrap = document.getElementById('timelineWrap');
   const DRAG_THRESHOLD = 4; // px of movement before it counts as a drag
-
-  document.querySelectorAll('.evidence').forEach(card => {
-    const ribbon = card.querySelector('.ribbon');
-    let startX, startY, startLeft, startTop, dragging = false;
-
-    ribbon.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      const wrapRect = timelineWrap.getBoundingClientRect();
-      const cardRect = card.getBoundingClientRect();
-
-      // convert current position to absolute px within timelineWrap,
-      // removing the translateX(-50%) centering for predictable dragging
-      startLeft = cardRect.left - wrapRect.left;
-      startTop  = cardRect.top  - wrapRect.top;
-      card.style.transform = 'none';
-      card.style.left = startLeft + 'px';
-      card.style.top  = startTop  + 'px';
-
-      startX = e.clientX;
-      startY = e.clientY;
-      dragging = false;
-
-      function onMove(e){
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (!dragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
-          dragging = true;
-          card.classList.add('dragging');
-        }
-        if (dragging) {
-          card.style.left = (startLeft + dx) + 'px';
-          card.style.top  = (startTop  + dy) + 'px';
-          updateConnector(card);
-        }
-      }
-
-      function onUp(){
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        card.classList.remove('dragging');
-
-        if (!dragging) {
-          // it was a click, not a drag -> toggle vertical collapse
-          card.classList.toggle('collapsed-v');
-          setTimeout(() => updateConnector(card), 260);
-        }
-      }
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  });
-
-  // ── Dynamic connectors (anchor fixed on timeline, other end follows card) ──
   const svg = document.getElementById('connectorSvg');
   const lineEls = {};
 
@@ -507,14 +576,227 @@
     line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
     line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
   }
-  document.querySelectorAll('.evidence').forEach(card => {
+  function positionAnchorDot(card, dot){
+    const a = getAnchorXY(card);
+    dot.setAttribute('cx', a.x);
+    dot.setAttribute('cy', a.y);
+  }
+
+  // Full setup for one evidence card: collapse re-expand, ribbon drag,
+  // connector line + draggable anchor dot
+  function wireCard(card){
+    // re-expand a collapsed (square) card on click
+    card.addEventListener('click', (e) => {
+      if (card.classList.contains('collapsed') && !card.classList.contains('collapsed-v')) {
+        card.classList.remove('collapsed');
+        setTimeout(() => updateConnector(card), 260);
+      }
+    });
+
+    // ribbon: drag to move, click to toggle vertical collapse
+    const ribbon = card.querySelector('.ribbon');
+    let startX, startY, startLeft, startTop, dragging = false;
+
+    ribbon.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const wrapRect = timelineWrap.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+
+      startLeft = cardRect.left - wrapRect.left;
+      startTop  = cardRect.top  - wrapRect.top;
+      card.style.transform = 'none';
+      card.style.left = startLeft + 'px';
+      card.style.top  = startTop  + 'px';
+
+      startX = e.clientX;
+      startY = e.clientY;
+      dragging = false;
+
+      function onMove(e){
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (!dragging && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+          dragging = true;
+          card.classList.add('dragging');
+        }
+        if (dragging) {
+          card.style.left = (startLeft + dx) + 'px';
+          card.style.top  = (startTop  + dy) + 'px';
+          updateConnector(card);
+        }
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        card.classList.remove('dragging');
+        if (!dragging) {
+          card.classList.toggle('collapsed-v');
+          setTimeout(() => updateConnector(card), 260);
+        }
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // connector line
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('stroke','rgba(124,109,250,0.45)');
     line.setAttribute('stroke-width','1');
     line.setAttribute('stroke-dasharray','4 4');
     svg.appendChild(line);
     lineEls[card.dataset.id] = line;
+
+    // draggable anchor dot on the timeline
+    const anchorDot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    anchorDot.setAttribute('r','6');
+    anchorDot.setAttribute('fill', card.classList.contains('above') ? 'var(--accent)' : 'var(--accent2)');
+    anchorDot.setAttribute('stroke', '#0d0d14');
+    anchorDot.setAttribute('stroke-width','2');
+    anchorDot.style.cursor = 'ew-resize';
+    anchorDot.style.pointerEvents = 'all';
+    svg.appendChild(anchorDot);
+
     updateConnector(card);
+    positionAnchorDot(card, anchorDot);
+
+    anchorDot.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      function onMove(e){
+        const wrapRect = timelineWrap.getBoundingClientRect();
+        let pct = ((e.clientX - wrapRect.left) / wrapRect.width) * 100;
+        pct = Math.max(0, Math.min(100, pct));
+        card.dataset.anchor = pct.toFixed(2);
+        positionAnchorDot(card, anchorDot);
+        updateConnector(card);
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  // wire up the cards already in the page
+  document.querySelectorAll('.evidence').forEach(wireCard);
+
+  // ── Create a new evidence card (used when dropping a verse from the drawer) ──
+  let newCardCounter = 1;
+  function createEvidenceCard(ref, text, dropX, dropY){
+    const wrapRect = timelineWrap.getBoundingClientRect();
+    const isAbove = dropY < wrapRect.height / 2;
+    const id = 'new' + (newCardCounter++);
+    const anchorPct = Math.max(0, Math.min(100, (dropX / wrapRect.width) * 100));
+
+    const card = document.createElement('div');
+    card.className = 'evidence ' + (isAbove ? 'above' : 'below');
+    card.dataset.id = id;
+    card.dataset.anchor = anchorPct.toFixed(2);
+    card.style.left = (dropX - 75) + 'px'; // center ~150px-wide card on drop point
+    card.style.top  = (dropY - (isAbove ? 60 : 0)) + 'px';
+
+    card.innerHTML = `
+      <div class="ribbon"><span class="dot"></span><span class="label-text">${ref}</span></div>
+      <div class="txt">${text}</div>
+      <div class="collapse-strip" onclick="toggleCollapse(this)"></div>
+      <div class="note-btn" onclick="openCardNote(event,'${id}')">📝</div>
+    `;
+
+    timelineWrap.appendChild(card);
+    wireCard(card);
+    return card;
+  }
+
+  // ── Bible drawer: drag verse onto timeline ──
+  document.querySelectorAll('.verse-item').forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        ref: item.dataset.ref,
+        text: item.textContent.replace(item.querySelector('.vref').textContent, '').trim()
+      }));
+    });
+  });
+
+  timelineWrap.addEventListener('dragover', (e) => {
+    e.preventDefault(); // allow drop
+  });
+
+  timelineWrap.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    if (!data) return;
+    let parsed;
+    try { parsed = JSON.parse(data); } catch { return; }
+
+    const wrapRect = timelineWrap.getBoundingClientRect();
+    const dropX = e.clientX - wrapRect.left;
+    const dropY = e.clientY - wrapRect.top;
+
+    createEvidenceCard(parsed.ref, parsed.text, dropX, dropY);
+  });
+
+
+  // ── Bible drawer ──
+  const drawer = document.getElementById('drawer');
+  document.getElementById('drawerToggle').addEventListener('click', () => {
+    drawer.classList.toggle('open');
+  });
+
+  function toggleBook(el){
+    el.closest('.book').classList.toggle('open');
+  }
+
+  // Real-time search across book names and verse text/refs
+  const searchInput = document.getElementById('drawerSearch');
+  const books = document.querySelectorAll('.book');
+  const noResults = document.getElementById('noResults');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    let anyVisible = false;
+
+    books.forEach(book => {
+      const bookName = book.dataset.book.toLowerCase();
+      const verses = book.querySelectorAll('.verse-item');
+      let bookHasMatch = false;
+
+      if (q === '') {
+        book.classList.remove('hidden-by-search');
+        book.querySelector('.book-name').classList.remove('match');
+        verses.forEach(v => { v.classList.remove('hidden-by-search','match'); });
+        anyVisible = true;
+        return;
+      }
+
+      const bookNameMatches = bookName.includes(q);
+
+      verses.forEach(v => {
+        const text = (v.dataset.ref + ' ' + v.textContent).toLowerCase();
+        const verseMatches = text.includes(q);
+        if (verseMatches || bookNameMatches) {
+          v.classList.remove('hidden-by-search');
+          v.classList.toggle('match', verseMatches);
+          bookHasMatch = true;
+        } else {
+          v.classList.add('hidden-by-search');
+          v.classList.remove('match');
+        }
+      });
+
+      if (bookHasMatch) {
+        book.classList.remove('hidden-by-search');
+        book.classList.add('open'); // auto-expand on search
+        book.querySelector('.book-name').classList.toggle('match', bookNameMatches);
+        anyVisible = true;
+      } else {
+        book.classList.add('hidden-by-search');
+        book.querySelector('.book-name').classList.remove('match');
+      }
+    });
+
+    noResults.style.display = anyVisible ? 'none' : 'block';
   });
 
   // ── Per-card notes popup ──
